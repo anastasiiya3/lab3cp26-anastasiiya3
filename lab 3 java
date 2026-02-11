@@ -1,0 +1,559 @@
+import java.util.ArrayList;
+import java.util.List;
+
+// ==================== 1. BUILDER PATTERN (БУДІВНИК) ====================
+
+// Продукт: Піца
+class Pizza {
+    private String dough;      // Тісто
+    private String sauce;      // Соус
+    private String cheese;     // Сир
+    private List<String> toppings; // Топінги
+    private String size;       // Розмір
+    
+    // Конструктор - ініціалізуємо список топінгів
+    public Pizza() {
+        toppings = new ArrayList<>();
+    }
+    
+    // Сеттери для компонентів піци
+    public void setDough(String dough) {
+        this.dough = dough;
+    }
+    
+    public void setSauce(String sauce) {
+        this.sauce = sauce;
+    }
+    
+    public void setCheese(String cheese) {
+        this.cheese = cheese;
+    }
+    
+    public void addTopping(String topping) {
+        toppings.add(topping);
+    }
+    
+    public void setSize(String size) {
+        this.size = size;
+    }
+    
+    // Метод для відображення інформації про піцу
+    public void display() {
+        System.out.println("\nПіца: " + size);
+        System.out.println("Тісто: " + dough);
+        System.out.println("Соус: " + sauce);
+        System.out.println("Сир: " + cheese);
+        System.out.println("Топінги: " + String.join(", ", toppings));
+        System.out.println("Вартість: " + calculatePrice() + " грн");
+    }
+    
+    // Метод для розрахунку ціни піци
+    public double calculatePrice() {
+        double price = 50; // Базова ціна
+        
+        // Додаємо націнку за розмір
+        switch(size) {
+            case "Маленька": price += 0; break;
+            case "Середня": price += 30; break;
+            case "Велика": price += 60; break;
+        }
+        
+        // Додаємо націнку за додаткові топінги (більше 2)
+        if (toppings.size() > 2) price += (toppings.size() - 2) * 10;
+        
+        return price;
+    }
+}
+
+// Абстрактний будівельник піци
+abstract class PizzaBuilder {
+    protected Pizza pizza;  // Продукт, який будуємо
+    
+    // Створюємо нову піцу
+    public void createNewPizza() {
+        pizza = new Pizza();
+    }
+    
+    // Отримуємо готову піцу
+    public Pizza getPizza() {
+        return pizza;
+    }
+    
+    // Абстрактні методи, які реалізують конкретні будівельники
+    public abstract void buildDough();     // Створення тіста
+    public abstract void buildSauce();     // Створення соусу
+    public abstract void buildCheese();    // Додавання сиру
+    public abstract void buildToppings();  // Додавання топінгів
+    public abstract void buildSize();      // Вибір розміру
+}
+
+// Конкретний будівельник для піци Маргарита
+class MargheritaBuilder extends PizzaBuilder {
+    @Override
+    public void buildDough() {
+        pizza.setDough("Тонке італійське");
+    }
+    
+    @Override
+    public void buildSauce() {
+        pizza.setSauce("Томатний");
+    }
+    
+    @Override
+    public void buildCheese() {
+        pizza.setCheese("Моцарелла");
+    }
+    
+    @Override
+    public void buildToppings() {
+        pizza.addTopping("Помідори");
+        pizza.addTopping("Базилік");
+    }
+    
+    @Override
+    public void buildSize() {
+        pizza.setSize("Середня");
+    }
+}
+
+// Конкретний будівельник для піци Пепероні
+class PepperoniBuilder extends PizzaBuilder {
+    @Override
+    public void buildDough() {
+        pizza.setDough("Товсте американське");
+    }
+    
+    @Override
+    public void buildSauce() {
+        pizza.setSauce("Гострий томатний");
+    }
+    
+    @Override
+    public void buildCheese() {
+        pizza.setCheese("Чеддер");
+    }
+    
+    @Override
+    public void buildToppings() {
+        pizza.addTopping("Пепероні");
+        pizza.addTopping("Гриби");
+        pizza.addTopping("Цибуля");
+    }
+    
+    @Override
+    public void buildSize() {
+        pizza.setSize("Велика");
+    }
+}
+
+// Конкретний будівельник для вегетаріанської піци
+class VegetarianBuilder extends PizzaBuilder {
+    @Override
+    public void buildDough() {
+        pizza.setDough("Тонке цільнозернове");
+    }
+    
+    @Override
+    public void buildSauce() {
+        pizza.setSauce("Вершковий");
+    }
+    
+    @Override
+    public void buildCheese() {
+        pizza.setCheese("Моцарелла");
+    }
+    
+    @Override
+    public void buildToppings() {
+        pizza.addTopping("Гриби");
+        pizza.addTopping("Перець");
+        pizza.addTopping("Оливки");
+        pizza.addTopping("Цибуля");
+        pizza.addTopping("Кукурудза");
+    }
+    
+    @Override
+    public void buildSize() {
+        pizza.setSize("Велика");
+    }
+}
+
+// Директор - керує процесом будівництва піци
+class PizzaDirector {
+    private PizzaBuilder builder;  // Поточний будівельник
+    
+    // Встановлюємо будівельника
+    public void setBuilder(PizzaBuilder builder) {
+        this.builder = builder;
+    }
+    
+    // Побудова піци з використанням будівельника
+    public Pizza buildPizza() {
+        builder.createNewPizza();
+        builder.buildDough();
+        builder.buildSauce();
+        builder.buildCheese();
+        builder.buildToppings();
+        builder.buildSize();
+        return builder.getPizza();
+    }
+}
+
+// ==================== 2. STATE PATTERN (СТАН) ====================
+
+// Інтерфейс стану замовлення
+interface OrderState {
+    void handle(OrderContext context);  // Обробка стану
+    String getStatus();                 // Отримання назви стану
+}
+
+// Конкретний стан: Новий заказ
+class NewOrderState implements OrderState {
+    @Override
+    public void handle(OrderContext context) {
+        System.out.println("Замовлення створено. Очікування підтвердження...");
+    }
+    
+    @Override
+    public String getStatus() {
+        return "Новий";
+    }
+}
+
+// Конкретний стан: Підтверджений заказ
+class ConfirmedState implements OrderState {
+    @Override
+    public void handle(OrderContext context) {
+        System.out.println("Замовлення підтверджено. Піца готується...");
+    }
+    
+    @Override
+    public String getStatus() {
+        return "Підтверджено";
+    }
+}
+
+// Конкретний стан: Приготування
+class CookingState implements OrderState {
+    @Override
+    public void handle(OrderContext context) {
+        System.out.println("Піца готується на кухні...");
+    }
+    
+    @Override
+    public String getStatus() {
+        return "Готується";
+    }
+}
+
+// Конкретний стан: Випікання завершено
+class BakedState implements OrderState {
+    @Override
+    public void handle(OrderContext context) {
+        System.out.println("Піца випічена! Готова до доставки.");
+    }
+    
+    @Override
+    public String getStatus() {
+        return "Випічена";
+    }
+}
+
+// Конкретний стан: Доставлено
+class DeliveredState implements OrderState {
+    @Override
+    public void handle(OrderContext context) {
+        System.out.println("Піца доставлена клієнту. Замовлення завершено!");
+    }
+    
+    @Override
+    public String getStatus() {
+        return "Доставлено";
+    }
+}
+
+// Контекст замовлення - зберігає поточний стан
+class OrderContext {
+    private OrderState currentState;  // Поточний стан
+    private Pizza pizza;              // Піца замовлення
+    private int orderNumber;          // Номер замовлення
+    
+    // Конструктор - створює замовлення в стані "Новий"
+    public OrderContext(int orderNumber, Pizza pizza) {
+        this.orderNumber = orderNumber;
+        this.pizza = pizza;
+        this.currentState = new NewOrderState();
+    }
+    
+    // Встановлення нового стану
+    public void setState(OrderState state) {
+        this.currentState = state;
+    }
+    
+    // Обробка поточного стану
+    public void process() {
+        System.out.println("\n=== Обробка замовлення #" + orderNumber + " ===");
+        currentState.handle(this);
+    }
+    
+    // Перехід до наступного стану
+    public void nextState() {
+        String current = currentState.getStatus();
+        
+        // Логіка переходу між станами
+        if (current.equals("Новий")) {
+            setState(new ConfirmedState());
+        } else if (current.equals("Підтверджено")) {
+            setState(new CookingState());
+        } else if (current.equals("Готується")) {
+            setState(new BakedState());
+        } else if (current.equals("Випічена")) {
+            setState(new DeliveredState());
+        }
+    }
+    
+    // Геттери
+    public String getStatus() {
+        return currentState.getStatus();
+    }
+    
+    public Pizza getPizza() {
+        return pizza;
+    }
+    
+    public int getOrderNumber() {
+        return orderNumber;
+    }
+}
+
+// ==================== 3. FACADE PATTERN (ФАСАД) ====================
+
+// Підсистема: Система оплати
+class PaymentSystem {
+    public boolean processPayment(double amount) {
+        System.out.println("Обробка платежу на суму: " + amount + " грн...");
+        // Симуляція успішної оплати
+        return true;
+    }
+}
+
+// Підсистема: Система кухні
+class KitchenSystem {
+    public void preparePizza(Pizza pizza) {
+        System.out.println("Кухня: Готуємо піцу вартістю " + pizza.calculatePrice() + " грн...");
+    }
+}
+
+// Підсистема: Система доставки
+class DeliverySystem {
+    public void scheduleDelivery(int orderNumber) {
+        System.out.println("Доставка: Замовлення #" + orderNumber + " заплановано на доставку");
+    }
+}
+
+// Фасад для системи замовлення піци - спрощений інтерфейс
+class PizzaOrderingFacade {
+    private PizzaDirector director;      // Директор для створення піци
+    private PaymentSystem payment;       // Підсистема оплати
+    private KitchenSystem kitchen;       // Підсистема кухні
+    private DeliverySystem delivery;     // Підсистема доставки
+    private List<OrderContext> orders;   // Список замовлень
+    private int orderCounter;            // Лічильник замовлень
+    
+    // Конструктор - ініціалізує всі компоненти
+    public PizzaOrderingFacade() {
+        director = new PizzaDirector();
+        payment = new PaymentSystem();
+        kitchen = new KitchenSystem();
+        delivery = new DeliverySystem();
+        orders = new ArrayList<>();
+        orderCounter = 1;
+    }
+    
+    // Основний метод фасаду - приховує складність підсистем
+    public OrderContext placeOrder(PizzaBuilder builder, String customerName) {
+        System.out.println("\nРозміщення замовлення для " + customerName + "...");
+        
+        // Крок 1: Створення піци через Builder
+        director.setBuilder(builder);
+        Pizza pizza = director.buildPizza();
+        
+        // Крок 2: Оплата
+        if (!payment.processPayment(pizza.calculatePrice())) {
+            System.out.println("Оплата не вдалася!");
+            return null;
+        }
+        
+        // Крок 3: Створення контексту замовлення
+        OrderContext order = new OrderContext(orderCounter++, pizza);
+        orders.add(order);
+        
+        // Крок 4: Кухня починає готувати
+        kitchen.preparePizza(pizza);
+        
+        // Крок 5: Планування доставки
+        delivery.scheduleDelivery(order.getOrderNumber());
+        
+        System.out.println("Замовлення успішно розміщено!");
+        return order;
+    }
+    
+    // Обробка всіх замовлень
+    public void processAllOrders() {
+        System.out.println("\nОбробка всіх замовлень...");
+        for (OrderContext order : orders) {
+            order.process();
+        }
+    }
+    
+    // Перехід всіх замовлень до наступного стану
+    public void advanceAllOrders() {
+        System.out.println("\nПерехід всіх замовлень до наступного стану...");
+        for (OrderContext order : orders) {
+            order.nextState();
+            System.out.println("Замовлення #" + order.getOrderNumber() + ": " + order.getStatus());
+        }
+    }
+    
+    // Показ всіх замовлень
+    public void showAllOrders() {
+        System.out.println("\nВсі замовлення:");
+        for (OrderContext order : orders) {
+            System.out.println("\n--- Замовлення #" + order.getOrderNumber() + " ---");
+            System.out.println("Статус: " + order.getStatus());
+            order.getPizza().display();
+        }
+    }
+    
+    // Геттер для списку замовлень
+    public List<OrderContext> getOrders() {
+        return orders;
+    }
+}
+
+// ==================== MAIN CLASS (ОСНОВНИЙ КЛАС) ====================
+
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("==========================================");
+        System.out.println("    СИСТЕМА ЗАМОВЛЕННЯ ПІЦИ (ШАБЛОНИ)");
+        System.out.println("==========================================");
+        
+        // Створюємо фасад для системи замовлень
+        PizzaOrderingFacade orderingSystem = new PizzaOrderingFacade();
+        
+        // Створюємо будівельників для різних типів піц
+        PizzaBuilder margheritaBuilder = new MargheritaBuilder();
+        PizzaBuilder pepperoniBuilder = new PepperoniBuilder();
+        PizzaBuilder vegetarianBuilder = new VegetarianBuilder();
+        
+        System.out.println("\n1. Розміщення замовлень за допомогою Фасаду...");
+        
+        // Розміщуємо замовлення через фасад
+        OrderContext order1 = orderingSystem.placeOrder(margheritaBuilder, "Іван Іванов");
+        OrderContext order2 = orderingSystem.placeOrder(pepperoniBuilder, "Марія Петрова");
+        OrderContext order3 = orderingSystem.placeOrder(vegetarianBuilder, "Олексій Сидоров");
+        
+        // Показуємо всі замовлення
+        orderingSystem.showAllOrders();
+        
+        System.out.println("\n\n2. Робота з патерном Стан...");
+        
+        // Обробляємо замовлення
+        orderingSystem.processAllOrders();
+        
+        // Переводимо замовлення по станах
+        for (int i = 0; i < 4; i++) {
+            System.out.println("\n--- Перехід " + (i + 1) + " ---");
+            orderingSystem.advanceAllOrders();
+            orderingSystem.processAllOrders();
+        }
+        
+        System.out.println("\n\n3. Демонстрація патерну Будівник...");
+        
+        // Створюємо кастомну піцу через Builder
+        System.out.println("\nСтворення кастомної піци через Builder...");
+        
+        PizzaDirector customDirector = new PizzaDirector();
+        
+        // Створюємо кастомного будівельника через анонімний клас
+        PizzaBuilder customBuilder = new PizzaBuilder() {
+            @Override
+            public void buildDough() {
+                pizza.setDough("Товсте сирне");
+            }
+            
+            @Override
+            public void buildSauce() {
+                pizza.setSauce("Часниковий");
+            }
+            
+            @Override
+            public void buildCheese() {
+                pizza.setCheese("Суміш 4 сирів");
+            }
+            
+            @Override
+            public void buildToppings() {
+                pizza.addTopping("Шинка");
+                pizza.addTopping("Гриби");
+                pizza.addTopping("Ананаси");
+                pizza.addTopping("Оливки");
+            }
+            
+            @Override
+            public void buildSize() {
+                pizza.setSize("Велика");
+            }
+        };
+        
+        customDirector.setBuilder(customBuilder);
+        Pizza customPizza = customDirector.buildPizza();
+        customPizza.display();
+        
+        System.out.println("\n\n4. Додаткове замовлення через фасад...");
+        
+        // Ще одне замовлення через фасад
+        OrderContext customOrder = orderingSystem.placeOrder(customBuilder, "Петро Коваленко");
+        
+        // Обробляємо його
+        for (int i = 0; i < 3; i++) {
+            customOrder.nextState();
+            customOrder.process();
+        }
+        
+        // Фінальний звіт
+        System.out.println("\n==========================================");
+        System.out.println("           ПІДСУМКОВИЙ ЗВІТ");
+        System.out.println("==========================================");
+        
+        System.out.println("\nВсього замовлень: " + orderingSystem.getOrders().size());
+        
+        int newOrders = 0;
+        int completedOrders = 0;
+        
+        // Підраховуємо замовлення за статусами
+        for (OrderContext order : orderingSystem.getOrders()) {
+            if (order.getStatus().equals("Новий") || order.getStatus().equals("Підтверджено")) {
+                newOrders++;
+            } else if (order.getStatus().equals("Доставлено")) {
+                completedOrders++;
+            }
+        }
+        
+        System.out.println("Нові/активні: " + newOrders);
+        System.out.println("Завершені: " + completedOrders);
+        
+        // Розраховуємо загальний дохід
+        double totalRevenue = 0;
+        for (OrderContext order : orderingSystem.getOrders()) {
+            totalRevenue += order.getPizza().calculatePrice();
+        }
+        
+        System.out.println("Загальний дохід: " + totalRevenue + " грн");
+        
+        System.out.println("\n==========================================");
+        System.out.println("     ДЕМОНСТРАЦІЯ ЗАВЕРШЕНА");
+        System.out.println("==========================================");
+    }
+}
